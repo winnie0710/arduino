@@ -10,6 +10,8 @@
 
   
 Eloquent::TinyML::TensorFlow::TensorFlow<N_INPUTS, N_OUTPUTS, TENSOR_ARENA_SIZE> tf;
+
+String ecg_name[5] = {"正常心跳","早發性新房收縮","早發性心室收縮","適性融合心跳","節律器融合心跳"};
     
 void setup() {  
     Serial.begin(115200);
@@ -37,6 +39,7 @@ void loop() {
     
     Serial.print("Predicted Class :");
     Serial.println(tf.probaToClass(y_pred));
-    Serial.print("Sanity check:");
+    Serial.print(ecg_name[tf.probaToClass(y_pred)]);
+    Serial.print("\nSanity check:");
     Serial.println(tf.predictClass(x_test_dat));
 }
