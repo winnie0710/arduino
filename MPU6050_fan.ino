@@ -275,7 +275,7 @@ void loop() {
             client.println(".button2 {background-color: #555555;}</style></head>");
             
             // Web Page Heading
-            client.println("<body><h1>ESP32 Web Server</h1>");
+            client.println("<body><h1>ESP32 Web Server-Final Project</h1>");
             
             // Display current state, and ON/OFF buttons for fan  
             client.println("<p>Fan state " + fanState + "</p>");
