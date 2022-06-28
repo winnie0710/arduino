@@ -57,18 +57,19 @@ uint8_t devStatus;      // return status after each device operation (0 = succes
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64]; // FIFO storage buffer
-int n=0;
+
 
 
 // orientation/motion vars
 Quaternion q;           // [w, x, y, z]         quaternion container
-VectorInt16 aa;         // [x, y, z]            accel sensor measurements
-VectorInt16 gy;         // [x, y, z]            gyro sensor measurements
-VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
-VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
-VectorFloat gravity;    // [x, y, z]            gravity vector
+//VectorInt16 aa;         // [x, y, z]            accel sensor measurements
+//VectorInt16 gy;         // [x, y, z]            gyro sensor measurements
+//VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
+//VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
+//VectorFloat gravity;    // [x, y, z]            gravity vector
 float euler[3];         // [psi, theta, phi]    Euler angle container
-float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+float ypr[3]; // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+float n;
 
 // packet structure for InvenSense teapot demo
 uint8_t teapotPacket[14] = { '$', 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0x00, 0x00, '\r', '\n' };
@@ -176,8 +177,8 @@ void setup() {
     Serial.println(F(")"));
   }
 
-  // configure LED for output
-  pinMode(LED_PIN, OUTPUT);
+   // configure LED for output
+   pinMode(LED_PIN, OUTPUT);
 }
 
 void loop() {
@@ -189,35 +190,47 @@ void loop() {
 #ifdef OUTPUT_READABLE_QUATERNION
     // display quaternion values in easy matrix form: w x y z
     mpu.dmpGetQuaternion(&q, fifoBuffer);
-    Serial.print("電風扇旋轉速度\t");
+    Serial.print("旋轉速度\t");
     Serial.print(q.w);
     Serial.print("\t");
-    Serial.print(q.x);
+    Serial.print(q.x);   //想用這個判斷是否轉動
     Serial.print("\t");
     Serial.print(q.y);
     Serial.print("\t");
     Serial.println(q.z);
+  
+   if (q.x == 0.00){       
+     Serial.println("close");
+     fanState = "off";
+   }else if (-0.3 <= q.x <= -0.01){
+     Serial.println("open");  
+     fanState = "on";        
+   }else if (0.01 <= q.x <= 0.3 ){
+     Serial.println("open");  
+     fanState = "on";
+   }else {
+     Serial.println("非電風扇轉動方式");
+     fanState = "Not fan";
+   }
     
-    if(q.x == 0.01){         //可能是沒在棟或是位於邊界
-      n=n+1;
-      if(n == 1){            //位於邊界是open
-        Serial.println("open");
-        fanState = "on";}
-      if(n >= 2){            //fan為停止狀態close
-        Serial.println("close");
-        fanState = "off";}
-      }
-    
-    if (-0.3 < q.x < -0.01 || 0.01 <q.x < 0.3 ){
-      Serial.println("open");  //fan地轉動範圍內
-      n=0;
-      fanState = "on";}                  //fan有在動 n歸零不干擾下次計算
+#endif
 
-    if(q.x <-0.3 || q.x > 0.3){
-      Serial.println("非電風扇轉動方式");
-      fanState = "Not fan";}
+#ifdef OUTPUT_TEAPOT_OSC
+#ifndef OUTPUT_READABLE_QUATERNION
+    // display quaternion values in easy matrix form: w x y z
+    mpu.dmpGetQuaternion(&q, fifoBuffer);
+#endif
+    // Send OSC message
+    OSCMessage msg("/imuquat");
+    msg.add((float)q.w);
+    msg.add((float)q.x);
+    msg.add((float)q.y);
+    msg.add((float)q.z);
    
-
+    Udp.beginPacket(outIp, outPort);
+    msg.send(Udp);
+    Udp.endPacket(); 
+    msg.empty(); 
     
 #endif
 
@@ -250,18 +263,7 @@ void loop() {
             client.println("Content-type:text/html");
             client.println("Connection: close");
             client.println();
-            
-            //GPIO LED燈的狀態
-            // turns the GPIOs on and off
-            //if (header.indexOf("GET /2/on") >= 0) {
-            //  Serial.println("GPIO 2 on");
-            //  output2State = "on";
-            //  digitalWrite(output2, HIGH);
-            //} else if (header.indexOf("GET /2/off") >= 0) {
-            //  Serial.println("GPIO 2 off");
-            //  output2State = "off";
-            //  digitalWrite(output2, LOW);
-            //}
+   
 
             // Display the HTML web page
             client.println("<!DOCTYPE html><html>");
@@ -275,20 +277,18 @@ void loop() {
             client.println(".button2 {background-color: #555555;}</style></head>");
             
             // Web Page Heading
-            client.println("<body><h1>ESP32 Web Server-Final Project</h1>");
+            client.println("<body><h1>ESP32 Web Server</h1>");
             
             // Display current state, and ON/OFF buttons for fan  
             client.println("<p>Fan state " + fanState + "</p>");
-            // If the fanState is off, it displays the ON button       
+            // If the fanState is off, it displays the off button       
             if (fanState=="on") {
               client.println("<p><a href=\"/2/on\"><button class=\"button\">ON</button></a></p>");
             } 
-            if(fanState=="off"){
+            else{
               client.println("<p><a href=\"/2/off\"><button class=\"button button2\">OFF</button></a></p>");
             } 
-            else{
-              client.println("<p><a href=\"/2/Not fan\"><button class=\"button button2\">OFF</button></a></p>");}
-               
+        
             
             client.println("</body></html>");
             
