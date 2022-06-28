@@ -8,7 +8,7 @@
 
 /************************* WiFi Access Point *********************************/
 
-#define WLAN_SSID "OPPO Reno2 Z"
+#define WLAN_SSID "yanweiiphone"
 #define WLAN_PASS "winnie0710"
 
 Adafruit_HTU21DF htu = Adafruit_HTU21DF();
@@ -23,8 +23,8 @@ Adafruit_HTU21DF htu = Adafruit_HTU21DF();
 // Adafruit IO Account Configuration
 // (to obtain these values, visit https://io.adafruit.com and click on Active Key)
 #define AIO_USERNAME "yanwei"
-#define AIO_KEY      "aio_NLsf063FiG5LbRVHNzrd02LaVp3X"
-
+#define AIO_KEY      "aio_QFYh63RkSXxNgi4kht93WbvYoCT6"
+//金鑰匙每次都會變!!
 /************ Global State (you don't need to change this!) ******************/
 
 // WiFiFlientSecure for SSL/TLS support
@@ -63,7 +63,7 @@ const char* adafruitio_root_ca = \
 // Setup a feed called 'test' for publishing.
 // Notice MQTT paths for AIO follow the form: <username>/feeds/<feedname>
 Adafruit_MQTT_Publish humid = Adafruit_MQTT_Publish(&mqtt,AIO_USERNAME "/feeds/humidity");
-Adafruit_MQTT_Publish temp = Adafruit_MQTT_Publish(&mqtt,AIO_USERNAME "/feeds/temperature");
+Adafruit_MQTT_Publish temp = Adafruit_MQTT_Publish(&mqtt,AIO_USERNAME "feeds/project-temperature");
 /*************************** Sketch Code ************************************/
 
 
@@ -91,7 +91,8 @@ Adafruit_MQTT_Publish temp = Adafruit_MQTT_Publish(&mqtt,AIO_USERNAME "/feeds/te
   Serial.println();
 
   Serial.println("WiFi connected");
-  Serial.println("IP address: "); Serial.println(WiFi.localIP());
+  Serial.println("IP address: "); 
+  Serial.println(WiFi.localIP());
 
   // Set Adafruit IO's root CA
   client.setCACert(adafruitio_root_ca);
@@ -113,24 +114,16 @@ Adafruit_MQTT_Publish temp = Adafruit_MQTT_Publish(&mqtt,AIO_USERNAME "/feeds/te
   
   MQTT_connect();
 
-  // Now we can publish stuff!
-  Serial.print(F("\nSending humidity =  "));
-  Serial.print(h);
-  Serial.print(F(" to humidity feed..."));
-  if (! humid.publish(h)) {
-    Serial.println(F("Failed"));
-  } else {
-    Serial.println(F("OK!"));
-  }
-  
 
   Serial.print(F("\nSending temperature =  "));
   Serial.print(t);
-  Serial.print(F(" to temperature feed..."));
-  if (! temp.publish(t)) {
-    Serial.println(F("Failed"));
+  Serial.print("\t");
+  
+  
+  if ( t > 28 ){
+    Serial.println(F("Open fan"));
   } else {
-    Serial.println(F("OK!"));
+    Serial.println(F("Close fan"));
   }
   // wait a couple seconds to avoid rate limit
   delay(2000);
