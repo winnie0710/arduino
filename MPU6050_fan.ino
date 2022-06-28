@@ -57,7 +57,7 @@ uint8_t devStatus;      // return status after each device operation (0 = succes
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64]; // FIFO storage buffer
-
+ 
 
 
 // orientation/motion vars
@@ -69,7 +69,7 @@ Quaternion q;           // [w, x, y, z]         quaternion container
 //VectorFloat gravity;    // [x, y, z]            gravity vector
 float euler[3];         // [psi, theta, phi]    Euler angle container
 float ypr[3]; // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
-float n;
+
 
 // packet structure for InvenSense teapot demo
 uint8_t teapotPacket[14] = { '$', 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0x00, 0x00, '\r', '\n' };
@@ -199,18 +199,16 @@ void loop() {
     Serial.print("\t");
     Serial.println(q.z);
   
-   if (q.x == 0.00){       
-     Serial.println("close");
-     fanState = "off";
-   }else if (-0.3 <= q.x <= -0.01){
+   
+   if ((-0.3 <= q.x) && (q.x<= -0.01) ){
      Serial.println("open");  
      fanState = "on";        
-   }else if (0.01 <= q.x <= 0.3 ){
+   }else if ((0.01 <= q.x) && (q.x <= 0.3)){
      Serial.println("open");  
      fanState = "on";
    }else {
-     Serial.println("非電風扇轉動方式");
-     fanState = "Not fan";
+    Serial.println("close");
+     fanState = "off";
    }
     
 #endif
@@ -277,7 +275,7 @@ void loop() {
             client.println(".button2 {background-color: #555555;}</style></head>");
             
             // Web Page Heading
-            client.println("<body><h1>ESP32 Web Server</h1>");
+            client.println("<body><h1>ESP32 Web Server Final Project</h1>");
             
             // Display current state, and ON/OFF buttons for fan  
             client.println("<p>Fan state " + fanState + "</p>");
